@@ -83,7 +83,7 @@ class RAGPipeline:
                     sources=[],
                     route="rate_limited",
                     user_role=user_role,
-                    accessible_collections=[],
+                    accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
                     guardrail_flags=["rate_limit_exceeded"],
                 )
         
@@ -100,7 +100,7 @@ class RAGPipeline:
                 sources=[],
                 route="blocked_by_guardrails",
                 user_role=user_role,
-                accessible_collections=[],
+                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
                 guardrail_flags=input_flags,
                 guardrail_warnings=[rejection_reason] if rejection_reason else [],
             )
@@ -155,7 +155,7 @@ class RAGPipeline:
                 sources=[],
                 route=route_name,
                 user_role=user_role,
-                accessible_collections=authorized_collections,
+                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
                 rbac_denied=True,
                 rbac_reason=retrieval_result.reason,
             )
@@ -170,7 +170,7 @@ class RAGPipeline:
                 sources=[],
                 route=route_name,
                 user_role=user_role,
-                accessible_collections=authorized_collections,
+                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
                 guardrail_flags=["no_relevant_context"],
             )
         
@@ -193,7 +193,7 @@ class RAGPipeline:
                 sources=[],
                 route=route_name,
                 user_role=user_role,
-                accessible_collections=authorized_collections,
+                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
                 guardrail_flags=["generation_failed"],
             )
         
@@ -239,7 +239,7 @@ class RAGPipeline:
             sources=sources,
             route=route_name,
             user_role=user_role,
-            accessible_collections=authorized_collections,
+            accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
             guardrail_flags=metadata.guardrail_flags,
             guardrail_warnings=[output_warning] if output_warning else [],
         )

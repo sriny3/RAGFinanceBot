@@ -16,7 +16,7 @@ I wanted to build something better.
 
 Here's the core principle: **if a user's role doesn't permit access to a document collection, those vectors are never retrieved, never sent to the LLM, and never appear in the response.** No amount of prompt engineering can bypass this.
 
-🌍 **Try it Live:** https://sriny-rag-fin-bot-unique-123.vercel.app/
+🌍 **Try it Live:** https://rag-finance-bot.vercel.app/
 
 ## How It Works
 

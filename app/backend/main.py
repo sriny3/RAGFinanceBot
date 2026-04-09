@@ -13,6 +13,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+# Initialize Azure Monitor Tracing FIRST (Before project imports)
+connection_string = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+if connection_string:
+    # Remove potential quotes (HF secrets sometimes include them)
+    connection_string = connection_string.strip("'\"")
+    try:
+        configure_azure_monitor(connection_string=connection_string)
+        # We'll instrument the app later after it's created
+    except Exception as e:
+        # Don't use logger yet as logging isn't fully set up with basicConfig
+        print(f"ERROR: Failed to initialize Azure Monitor Tracing: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
 from pipeline.rag_pipeline import get_rag_pipeline
 from retrieval.user_auth import get_user_manager
 from vector_store import get_vector_store
@@ -26,13 +41,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Azure Monitor Tracing (Must be done before app creation)
-if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
-    logger.info("Initializing Azure Monitor Tracing...")
-    try:
-        configure_azure_monitor()
-    except Exception as e:
-        logger.error(f"Failed to initialize Azure Monitor Tracing: {str(e)}")
+# Logging setup remains as is
 
 
 # ====================

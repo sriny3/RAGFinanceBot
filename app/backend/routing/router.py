@@ -102,22 +102,27 @@ class QueryRouter:
                     f"{route_collections}. Accessible: {user_accessible}",
                 )
             
-            # RBAC: if the route targets a specific domain (finance/engineering/marketing/hr)
+            # RBAC: if the route targets a *specific* domain (finance/engineering/marketing)
             # and the user doesn't have access to that domain, deny it.
             # This prevents a marketing user from "asking a finance question" and getting
             # an unhelpful "no relevant context" instead of a clear ACCESS DENIED.
-            domain_collections = [c for c in route_collections if c != "general"]
-            if domain_collections:
-                # There IS a domain collection for this route
-                user_has_domain = any(c in user_accessible for c in domain_collections)
-                if not user_has_domain:
-                    return (
-                        "denied",
-                        [],
-                        f"Access denied: Your role '{user_role}' does not have permission to access "
-                        f"{route_name[:-6].replace('_', ' ').title()} information. "  # e.g. "Finance"
-                        f"You can only access: {', '.join(user_accessible)}.",
-                    )
+            #
+            # EXCEPTION: cross_department_route and hr_general_route are accessible
+            # to ALL roles — they should simply be filtered to each user's accessible
+            # collections (which already happened above on line 92-94).
+            if route_name not in ("cross_department_route", "hr_general_route"):
+                domain_collections = [c for c in route_collections if c != "general"]
+                if domain_collections:
+                    # There IS a domain collection for this route
+                    user_has_domain = any(c in user_accessible for c in domain_collections)
+                    if not user_has_domain:
+                        return (
+                            "denied",
+                            [],
+                            f"Access denied: Your role '{user_role}' does not have permission to access "
+                            f"{route_name[:-6].replace('_', ' ').title()} information. "  # e.g. "Finance"
+                            f"You can only access: {', '.join(user_accessible)}.",
+                        )
             
             logger.info(
                 f"Routed query to {route_name}: {authorized} "

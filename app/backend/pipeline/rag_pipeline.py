@@ -58,6 +58,27 @@ class RAGPipeline:
         Returns:
             RAGResponse with answer, sources, and metadata
         """
+        try:
+            return self._process_query(user_role, query_text, user_id)
+        except Exception as e:
+            logger.error(f"Unexpected error in RAG pipeline: {str(e)}", exc_info=True)
+            return RAGResponse(
+                answer="I'm sorry, I encountered an unexpected error while processing your question. Please try again in a moment.",
+                sources=[],
+                route="error",
+                user_role=user_role,
+                accessible_collections=[],
+                guardrail_flags=["pipeline_error"],
+                guardrail_warnings=[f"Internal error: {str(e)}"],
+            )
+    
+    def _process_query(
+        self,
+        user_role: str,
+        query_text: str,
+        user_id: Optional[str] = None,
+    ) -> RAGResponse:
+        """Internal query processing. Separated so answer_query can wrap with try/except."""
         metadata = QueryMetadata(
             user_role=user_role,
             user_department=self._get_department(user_role),
@@ -187,9 +208,9 @@ class RAGPipeline:
         # Generate answer
         answer = self._generate_answer(query_text, context, user_role)
         
-        if not answer:
+        if not answer or not answer.strip():
             return RAGResponse(
-                answer="I encountered an error while generating a response.",
+                answer="I wasn't able to generate a response for your question. Please try rephrasing or ask a different question.",
                 sources=[],
                 route=route_name,
                 user_role=user_role,

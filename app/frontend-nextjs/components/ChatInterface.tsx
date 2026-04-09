@@ -61,21 +61,35 @@ export default function ChatInterface({ user, onLogout, onAdminPanel }: ChatInte
         user_id: user.username,
       });
 
+      // Guard against empty/blank responses from the backend
+      const answerText = response.answer?.trim()
+        ? response.answer
+        : "I wasn't able to generate a response for your question. Please try rephrasing or ask a different question.";
+
       const assistantMessage: ChatMessageType = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: response.answer,
+        content: answerText,
         timestamp: new Date(),
-        response,
+        response: { ...response, answer: answerText },
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (error: unknown) {
+      // Extract a helpful message from the error if possible
+      let errorText = 'Sorry, I encountered an error processing your query. Please try again in a moment.';
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { error?: string; detail?: string } } };
+        const serverMsg = axiosError.response?.data?.detail || axiosError.response?.data?.error;
+        if (serverMsg) {
+          errorText = `Sorry, something went wrong: ${serverMsg}`;
+        }
+      }
+
       const errorMessage: ChatMessageType = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content:
-          'Sorry, I encountered an error processing your query. Please ensure the backend is running on http://localhost:8000',
+        content: errorText,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);

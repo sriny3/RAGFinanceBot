@@ -172,8 +172,18 @@ async def chat(request: ChatRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error processing chat request: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        logger.error(f"Error processing chat request: {str(e)}", exc_info=True)
+        # Return a proper ChatResponse with error info instead of a 500,
+        # so the frontend always has something to display.
+        return ChatResponse(
+            answer="I'm sorry, I encountered an unexpected error while processing your question. Please try again in a moment.",
+            sources=[],
+            route="error",
+            user_role=request.user_role,
+            accessible_collections=[],
+            guardrail_flags=["server_error"],
+            guardrail_warnings=[f"Internal error: {str(e)}"],
+        )
 
 
 # ====================

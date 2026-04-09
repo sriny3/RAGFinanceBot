@@ -85,8 +85,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
           )}
 
           {systemHealth === true && collectionsReady && (
-            <div className="bg-green-500/10 border border-green-500 rounded-lg p-3 mb-6">
-              <p className="text-green-700 text-sm font-medium">✓ System Online — All Collections Available</p>
+            <div className="bg-green-500/20 border border-green-400 rounded-lg p-3 mb-6">
+              <p className="text-green-300 text-sm font-medium tracking-wide">✓ System Online — All Collections Available</p>
             </div>
           )}
         </div>

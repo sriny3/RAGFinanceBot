@@ -221,12 +221,25 @@ class RAGPipeline:
         # BUILD SOURCES
         # ====================
         sources = []
-        for chunk in chunks[:3]:  # Top 3 sources
-            sources.append({
-                "document": chunk.source_document,
-                "page_number": chunk.page_number or 1,
-                "section_title": chunk.section_title,
-            })
+        seen_sources = set()
+        
+        for chunk in chunks:
+            if len(sources) >= 3:
+                break
+                
+            source_key = (
+                chunk.source_document,
+                chunk.page_number or 1,
+                chunk.section_title or ""
+            )
+            
+            if source_key not in seen_sources:
+                seen_sources.add(source_key)
+                sources.append({
+                    "document": chunk.source_document,
+                    "page_number": chunk.page_number or 1,
+                    "section_title": chunk.section_title,
+                })
         
         metadata.sources = [s["document"] for s in sources]
         metadata.answer = answer

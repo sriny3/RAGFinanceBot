@@ -32,7 +32,7 @@ This document provides an overview of the complete FinBot RAG system with both f
 │ 1. Input Guards (injection, PII, etc)   │
 │ 2. Query Router (semantic routing)      │
 │ 3. RBAC Retriever (metadata filtering)  │
-│ 4. LLM Generation (Groq Mixtral)         │
+│ 4. LLM Generation (Llama 3.3 70B)       │
 │ 5. Output Guards (grounding, citations) │
 └────────────────┬─────────────────────────┘
                  ↓

@@ -65,11 +65,11 @@ FinBot solves both problems:
      ┌───────────┐  ┌──────────────┐  ┌────────────┐  ┌──────────┐
      │  GUARDRAILS  │  │   SEMANTIC   │  │   RBAC    │  │   LLM    │
      │   (INPUT)    │  │   ROUTING    │  │RETRIEVAL  │  │  (GROQ)  │
-     │           │  │              │  │          │  │ (Mixtral)│
-     │ • Injection  │  │ • 5 Routes   │  │ • Filter  │  │ • Answer │
-     │ • Off-topic  │  │ • Collections│  │ • By Role │  │ • Cite   │
-     │ • PII        │  │ • Role Check │  │ • Qdrant  │  │ • Ground │
-     │ • Rate limit │  │              │  │          │  │          │
+     │           │  │              │  │          │  │(Llama 3.3│
+     │ • Injection  │  │ • 5 Routes   │  │ • Filter  │  │   70B)   │
+     │ • Off-topic  │  │ • Collections│  │ • By Role │  │ • Answer │
+     │ • PII        │  │ • Role Check │  │ • Qdrant  │  │ • Cite   │
+     │ • Rate limit │  │              │  │          │  │ • Ground │
      └───────────┘  └──────────────┘  └────────────┘  └──────────┘
                        │                 │
                        └────────┬────────┘
@@ -214,7 +214,7 @@ Assignment1/
 ### Prerequisites
 
 - Python 3.10+
-- OpenAI API key
+- Groq API key
 - ~500MB disk space for Qdrant
 - Modern web browser
 

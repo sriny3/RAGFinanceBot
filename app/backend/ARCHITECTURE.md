@@ -129,7 +129,7 @@ User Role + Selected Collection → Check access → Query vector store
 
 **Stage 4: LLM Generation**
 ```
-Question + Retrieved Chunks → Groq (Mixtral-8x7b-32k) → Generate answer
+Question + Retrieved Chunks → Groq (Llama 3.3 70B) → Generate answer
         Uses retrieved chunks as context (RAG)
 ```
 

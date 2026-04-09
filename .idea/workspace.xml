@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="862a11f8-863d-4e96-8f21-4807958f32e1" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Assignment_Instruction.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/engineering/engineering_master_doc.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/engineering/incident_report_log.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/engineering/sprint_metrics_2024.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/engineering/system_sla_report_2024.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/finance/department_budget_2024.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/finance/financial_summary.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/finance/quarterly_financial_report.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/finance/vendor_payments_summary.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/general/employee_handbook.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/hr/hr_data.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/marketing/campaign_performance_data.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/marketing/customer_acquisition_report.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/marketing/marketing_report_2024.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/marketing/marketing_report_q1_2024.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/marketing/marketing_report_q2_2024.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/marketing/marketing_report_q3_2024.docx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/marketing/marketing_report_q4_2024.docx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3BS4pp4tNebpD44vjIlgprf1M1v" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/development/CodeBasics/Bootcamp/Assignment/Assignment1",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-1cd77e80b48f-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.32098.74" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="862a11f8-863d-4e96-8f21-4807958f32e1" name="Changes" comment="" />
+      <created>1774469323902</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1774469323902</updated>
+    </task>
+    <servers />
+  </component>
+</project>

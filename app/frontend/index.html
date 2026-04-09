@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinBot - FinSolve Q&A Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>FinBot</h1>
+                <p>FinSolve Technologies Q&A Assistant</p>
+            </div>
+            <div class="user-info" id="userInfo">
+                <select id="userSelect" onchange="switchUser()">
+                    <option value="">Select a user to login...</option>
+                </select>
+                <button id="logoutBtn" onclick="logout()" style="display: none;">Logout</button>
+            </div>
+        </header>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-screen">
+            <div class="login-box">
+                <h2>Welcome to FinBot</h2>
+                <p>Select your role to get started:</p>
+                <div id="usersList" class="users-list"></div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chatInterface" class="chat-interface" style="display: none;">
+            <div class="chat-container">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <div class="sidebar-section">
+                        <h3>Your Profile</h3>
+                        <div id="userProfile" class="user-profile">
+                            <p><strong>Name:</strong> <span id="userName">-</span></p>
+                            <p><strong>Role:</strong> <span id="userRole">-</span></p>
+                            <p><strong>Department:</strong> <span id="userDept">-</span></p>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3>Accessible Collections</h3>
+                        <div id="collections" class="collections-list"></div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3>System Status</h3>
+                        <p><span id="systemStatus" class="status-indicator">●</span> Ready</p>
+                    </div>
+                </aside>
+
+                <!-- Main Chat Area -->
+                <main class="chat-main">
+                    <!-- Guardrail Warnings -->
+                    <div id="guardrailWarnings" class="guardrail-warnings" style="display: none;"></div>
+
+                    <!-- Chat Messages -->
+                    <div id="chatMessages" class="chat-messages">
+                        <div class="system-message">
+                            <p><strong>Welcome!</strong> I'm FinBot, your Q&A assistant for FinSolve Technologies.</p>
+                            <p>I can answer questions about company policies, financial reports, engineering documentation, and marketing data - based on your access level.</p>
+                            <p>Try asking something like:</p>
+                            <ul>
+                                <li>"What are our HR policies?"</li>
+                                <li>"What was Q3 revenue?" (Finance users only)</li>
+                                <li>"Tell me about our system architecture" (Engineering users only)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Query Input -->
+                    <div class="query-input-area">
+                        <div class="input-group">
+                            <input
+                                type="text"
+                                id="queryInput"
+                                class="query-input"
+                                placeholder="Ask a question about FinSolve..."
+                                autocomplete="off"
+                                onkeypress="handleKeyPress(event)"
+                            >
+                            <button id="sendBtn" onclick="sendQuery()" class="send-btn">Send</button>
+                        </div>
+                        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                            <span class="spinner"></span> Processing your query...
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Detail Modal -->
+    <div id="messageModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

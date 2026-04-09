@@ -1,0 +1,273 @@
+
+============================================================
+  HEALTH & SETUP
+============================================================
+
+[200] Health
+{
+  "status": "healthy",
+  "collections_available": true,
+  "collections": [
+    "general",
+    "finance",
+    "engineering",
+    "marketing",
+    "hr"
+  ]
+}
+
+[200] Users
+[
+  {
+    "username": "emp_john",
+    "name": "John Employee",
+    "role": "employee",
+    "department": "General",
+    "accessible_collections": [
+      "general"
+    ]
+  },
+  {
+    "username": "fin_alice",
+    "name": "Alice Finance",
+    "role": "finance",
+    "department": "Finance",
+    "accessible_collections": [
+      "general",
+      "finance"
+    ]
+  },
+  {
+    "username": "eng_bob",
+    "name": "Bob Engineer",
+    "role": "engineering",
+    "department": "Engineering",
+    "accessible_collections": [
+      "general",
+      "engineering"
+    ]
+  },
+  {
+    "username": "mkt_carol",
+    "name": "Carol Marketing",
+    "role": "marketing",
+    "department": "Marketing",
+    "accessible_collections": [
+      "general",
+      "marketing"
+    ]
+  },
+  {
+    "username": "ceo_dave",
+    "name": "Dave C-Level",
+    "role": "c_level",
+    "department": "Executive",
+    "accessible_collections": [
+      "general",
+      "finance",
+      "engineering",
+      "marketing",
+      "hr"
+    ]
+  }
+]
+
+[200] Collections
+[
+  {
+    "name": "general",
+    "description": "Company policies, HR handbook, FAQs",
+    "accessible_roles": [
+      "employee",
+      "finance",
+      "engineering",
+      "marketing",
+      "c_level"
+    ]
+  },
+  {
+    "name": "finance",
+    "description": "Financial reports, budgets, investor documents",
+    "accessible_roles": [
+      "finance",
+      "c_level"
+    ]
+  },
+  {
+    "name": "engineering",
+    "description": "Technical specs, architecture docs, runbooks",
+    "accessible_roles": [
+      "engineering",
+      "c_level"
+    ]
+  },
+  {
+    "name": "marketing",
+    "description": "Campaign reports, brand guidelines, market research",
+    "accessible_roles": [
+      "marketing",
+      "c_level"
+    ]
+  },
+  {
+    "name": "hr",
+    "description": "HR policies, employee handbook",
+    "accessible_roles": [
+      "employee",
+      "finance",
+      "engineering",
+      "marketing",
+      "c_level"
+    ]
+  }
+]
+
+============================================================
+  CHAT TEST 1 � mkt_carol asks finance question (should be DENIED)
+============================================================
+
+[200] mkt_carol: What was Q3 revenue?
+{
+  "answer": "Access denied: Your role 'marketing' does not have permission to access Finance information. You can only access: general, marketing.",
+  "sources": [],
+  "route": "denied",
+  "user_role": "marketing",
+  "accessible_collections": [
+    "general",
+    "marketing"
+  ],
+  "guardrail_flags": [
+    "rbac_denied"
+  ],
+  "guardrail_warnings": [],
+  "rbac_denied": true,
+  "rbac_reason": "Access denied: Your role 'marketing' does not have permission to access Finance information. You can only access: general, marketing."
+}
+
+============================================================
+  CHAT TEST 2 � fin_alice asks finance question (should SUCCEED)
+============================================================
+
+[200] fin_alice: What was Q3 revenue?
+{
+  "answer": "The Q3 revenue was 203 \u20b9 Crore. (From: quarterly_financial_report.docx, Page 1)\n\n\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts. \u26a0\ufe0f **Warning**: This response does not cite source documents. Please inform the assistant to cite sources.",
+  "sources": [
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    },
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    },
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    }
+  ],
+  "route": "finance_route",
+  "user_role": "finance",
+  "accessible_collections": [
+    "general",
+    "finance"
+  ],
+  "guardrail_flags": [
+    "potentially_ungrounded",
+    "missing_citations"
+  ],
+  "guardrail_warnings": [
+    "\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts. \u26a0\ufe0f **Warning**: This response does not cite source documents. Please inform the assistant to cite sources."
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
+
+============================================================
+  CHAT TEST 3 � emp_john prompt injection (should be BLOCKED by guardrail)
+============================================================
+
+[200] emp_john: prompt injection
+{
+  "answer": "Query matches prohibited pattern: ignore.*instruction",
+  "sources": [],
+  "route": "blocked_by_guardrails",
+  "user_role": "employee",
+  "accessible_collections": [],
+  "guardrail_flags": [
+    "prompt_injection_detected"
+  ],
+  "guardrail_warnings": [
+    "Query matches prohibited pattern: ignore.*instruction"
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
+
+============================================================
+  CHAT TEST 4 � emp_john off-topic (should be BLOCKED)
+============================================================
+
+[200] emp_john: off-topic
+{
+  "answer": "Your query appears to be off-topic. I'm designed to answer questions about FinSolve's business, not general topics like entertainment or sports.",
+  "sources": [],
+  "route": "blocked_by_guardrails",
+  "user_role": "employee",
+  "accessible_collections": [],
+  "guardrail_flags": [
+    "off_topic_detected"
+  ],
+  "guardrail_warnings": [
+    "Your query appears to be off-topic. I'm designed to answer questions about FinSolve's business, not general topics like entertainment or sports."
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
+
+============================================================
+  CHAT TEST 5 � ceo_dave asks multi-collection question (should SUCCEED)
+============================================================
+
+[200] ceo_dave: Q3 revenue
+{
+  "answer": "The Q3 revenue was 203 \u20b9 Crore. (From: quarterly_financial_report.docx, Page 1)\n\n\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts. \u26a0\ufe0f **Warning**: This response does not cite source documents. Please inform the assistant to cite sources.",
+  "sources": [
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    },
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    },
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    }
+  ],
+  "route": "finance_route",
+  "user_role": "c_level",
+  "accessible_collections": [
+    "general",
+    "finance"
+  ],
+  "guardrail_flags": [
+    "potentially_ungrounded",
+    "missing_citations"
+  ],
+  "guardrail_warnings": [
+    "\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts. \u26a0\ufe0f **Warning**: This response does not cite source documents. Please inform the assistant to cite sources."
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
+
+============================================================
+  TESTS COMPLETE
+============================================================

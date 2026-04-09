@@ -1,0 +1,20 @@
+cc2aec7 Docs: Convert markdown tables to emoji bullet lists for LinkedIn compatibility
+b10b10b Docs: Update LinkedIn Post with Vercel Live App links
+20eba07 Docs: Update all documentation to reflect Hugging Face Spaces and Vercel deployment architecture
+8ce7410 Merge branch 'main' of https://github.com/sriny3/RAGFinBot
+1084c1d Deploy: Configure Hugging Face Spaces
+72b0813 Remove unused RAGResponse import from ChatInterface
+383d727 Remove unused import of DEMO_USERS in AdminPanel
+995c8f8 Fix HTML entity encoding in LoginScreen component
+3645422 Fix HTML entity encoding in LoginSFix: ESLint unescaped entity errors and bullet points in LoginScreen.tsxcreen component
+9e86f63 Fix HTML entity for apostrophe in CFix: ESLint unescaped entity errors in ChatInterface.tsxhatInterface
+7bdd6fe Fix: Remove secret reference in vercel.json that caused deployment failure
+7f648c3 feat: implement backend configuration module and establish project documentation structure
+18fe8a0 security: remove exposed API key from QUICKSTART.md, fix RBAC denial logic, fix role serialization, update LLM model
+71fd4cb feat: implement semantic query router with RBAC enforcement and add API integration tests
+e110268 chore: use ephemeral storage to support Render free tier
+b5660ef feat: add deployment configuration for Vercel and Render
+95e6582 refactor: migrate LLM provider to Groq and update documentation for persistent Qdrant storage
+95de29d docs: remove assignment instruction PDF and update README documentation
+f6c62e8 Excluding all .env files and data from Git tracking
+78a107c Fix: Remove ignored data and .env files from tracking

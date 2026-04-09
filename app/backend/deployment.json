@@ -1,0 +1,15 @@
+{
+  "appServiceSettings": {
+    "WEBSITE_PYTHON_VERSION": "3.12",
+    "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
+    "PYTHONPATH": "/home/site/wwwroot/app/backend",
+    "STARTUP_COMMAND": "/home/site/wwwroot/app/backend/start.sh"
+  },
+  "environmentVariables": {
+    "GROQ_API_KEY": "REPLACE_ME",
+    "QDRANT_URL": "REPLACE_ME",
+    "QDRANT_API_KEY": "REPLACE_ME",
+    "API_KEY_ADMIN": "REPLACE_ME",
+    "ENVIRONMENT": "production"
+  }
+}

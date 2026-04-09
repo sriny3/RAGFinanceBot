@@ -11,6 +11,8 @@ from typing import Optional
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from azure.monitor.opentelemetry import configure_azure_monitor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pipeline.rag_pipeline import get_rag_pipeline
 from retrieval.user_auth import get_user_manager
 from vector_store import get_vector_store
@@ -23,6 +25,14 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Initialize Azure Monitor Tracing (Must be done before app creation)
+if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    logger.info("Initializing Azure Monitor Tracing...")
+    try:
+        configure_azure_monitor()
+    except Exception as e:
+        logger.error(f"Failed to initialize Azure Monitor Tracing: {str(e)}")
 
 
 # ====================
@@ -120,6 +130,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Instrument FastAPI app
+if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    try:
+        FastAPIInstrumentor.instrument_app(app)
+        logger.info("FastAPI application instrumented with OpenTelemetry")
+    except Exception as e:
+        logger.error(f"Failed to instrument FastAPI app: {str(e)}")
 
 
 # ====================

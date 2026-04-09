@@ -14,6 +14,9 @@ from retrieval.user_auth import get_user_manager
 from guardrails.input_guards import get_input_guards
 from guardrails.output_guards import get_output_guards
 from config import LLM_CONFIG, RETRIEVAL_CONFIG
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -90,193 +93,210 @@ class RAGPipeline:
         
         logger.info(f"Processing query from user role '{user_role}': {query_text[:100]}")
         
-        # ====================
-        # STEP 1: INPUT GUARDS
-        # ====================
-        logger.info("STEP 1: Input validation...")
-        
-        # Check rate limiting if user_id provided
-        if user_id:
-            is_under_limit, rate_warning = self.input_guards.check_rate_limit(user_id)
-            if not is_under_limit:
+        with tracer.start_as_current_span("rag_pipeline_process_query") as span:
+            span.set_attribute("user.role", user_role)
+            span.set_attribute("query.text", query_text)
+            
+            # ====================
+            # STEP 1: INPUT GUARDS
+            # ====================
+            with tracer.start_as_current_span("stage_1_input_guards"):
+                logger.info("STEP 1: Input validation...")
+                
+                # Check rate limiting if user_id provided
+                if user_id:
+                    is_under_limit, rate_warning = self.input_guards.check_rate_limit(user_id)
+                    if not is_under_limit:
+                        return RAGResponse(
+                            answer=rate_warning or "Rate limit exceeded",
+                            sources=[],
+                            route="rate_limited",
+                            user_role=user_role,
+                            accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
+                            guardrail_flags=["rate_limit_exceeded"],
+                        )
+                
+                # Validate query for injection, off-topic, PII
+                is_valid, rejection_reason, input_flags = self.input_guards.validate_query(
+                    query_text,
+                    user_role
+                )
+                
+                if not is_valid:
+                    logger.warning(f"Query rejected by input guards: {rejection_reason}")
+                    return RAGResponse(
+                        answer=rejection_reason or "Query validation failed",
+                        sources=[],
+                        route="blocked_by_guardrails",
+                        user_role=user_role,
+                        accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
+                        guardrail_flags=input_flags,
+                        guardrail_warnings=[rejection_reason] if rejection_reason else [],
+                    )
+            
+            metadata.guardrail_flags.extend(input_flags)
+            
+            # ====================
+            # STEP 2: QUERY ROUTING
+            # ====================
+            with tracer.start_as_current_span("stage_2_routing") as route_span:
+                logger.info("STEP 2: Semantic routing...")
+                
+                route_name, authorized_collections, denial_reason = self.router.route_query(
+                    query_text,
+                    user_role
+                )
+                
+                route_span.set_attribute("route.name", route_name)
+                route_span.set_attribute("route.authorized_collections", str(authorized_collections))
+            
+            metadata.route_selected = route_name
+            metadata.collections_queried = authorized_collections
+            
+            # Check if RBAC denied this query
+            if route_name == "denied":
+                logger.warning(f"Query denied by RBAC: {denial_reason}")
                 return RAGResponse(
-                    answer=rate_warning or "Rate limit exceeded",
+                    answer=denial_reason or "You don't have access to the requested information.",
                     sources=[],
-                    route="rate_limited",
+                    route=route_name,
                     user_role=user_role,
                     accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
-                    guardrail_flags=["rate_limit_exceeded"],
+                    rbac_denied=True,
+                    rbac_reason=denial_reason,
+                    guardrail_flags=["rbac_denied"],
                 )
-        
-        # Validate query for injection, off-topic, PII
-        is_valid, rejection_reason, input_flags = self.input_guards.validate_query(
-            query_text,
-            user_role
-        )
-        
-        if not is_valid:
-            logger.warning(f"Query rejected by input guards: {rejection_reason}")
-            return RAGResponse(
-                answer=rejection_reason or "Query validation failed",
-                sources=[],
-                route="blocked_by_guardrails",
-                user_role=user_role,
-                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
-                guardrail_flags=input_flags,
-                guardrail_warnings=[rejection_reason] if rejection_reason else [],
-            )
-        
-        metadata.guardrail_flags.extend(input_flags)
-        
-        # ====================
-        # STEP 2: QUERY ROUTING
-        # ====================
-        logger.info("STEP 2: Semantic routing...")
-        
-        route_name, authorized_collections, denial_reason = self.router.route_query(
-            query_text,
-            user_role
-        )
-        
-        metadata.route_selected = route_name
-        metadata.collections_queried = authorized_collections
-        
-        # Check if RBAC denied this query
-        if route_name == "denied":
-            logger.warning(f"Query denied by RBAC: {denial_reason}")
-            return RAGResponse(
-                answer=denial_reason or "You don't have access to the requested information.",
-                sources=[],
-                route=route_name,
-                user_role=user_role,
-                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
-                rbac_denied=True,
-                rbac_reason=denial_reason,
-                guardrail_flags=["rbac_denied"],
-            )
-        
-        logger.info(f"Routed to: {route_name} → collections: {authorized_collections}")
-        
-        # ====================
-        # STEP 3: RETRIEVAL
-        # ====================
-        logger.info("STEP 3: RBAC-enforced retrieval...")
-        
-        retrieval_result = self.retriever.retrieve(
-            user_role=user_role,
-            collections=authorized_collections,
-            query_text=query_text,
-            top_k=RETRIEVAL_CONFIG.get("top_k", 5),
-        )
-        
-        if not retrieval_result.rbac_passed:
-            logger.warning(f"Retrieval RBAC check failed: {retrieval_result.reason}")
-            return RAGResponse(
-                answer="Unable to retrieve documents due to access restrictions.",
-                sources=[],
-                route=route_name,
-                user_role=user_role,
-                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
-                rbac_denied=True,
-                rbac_reason=retrieval_result.reason,
-            )
-        
-        chunks = retrieval_result.chunks
-        metadata.chunks_retrieved = len(chunks)
-        
-        if not chunks:
-            logger.info(f"No relevant documents found")
-            return RAGResponse(
-                answer="I couldn't find relevant information to answer your question.",
-                sources=[],
-                route=route_name,
-                user_role=user_role,
-                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
-                guardrail_flags=["no_relevant_context"],
-            )
-        
-        logger.info(f"Retrieved {len(chunks)} chunks")
-        
-        # ====================
-        # STEP 4: LLM GENERATION
-        # ====================
-        logger.info("STEP 4: LLM generation...")
-        
-        # Build context from chunks
-        context = self._build_context(chunks)
-        
-        # Generate answer
-        answer = self._generate_answer(query_text, context, user_role)
-        
-        if not answer or not answer.strip():
-            return RAGResponse(
-                answer="I wasn't able to generate a response for your question. Please try rephrasing or ask a different question.",
-                sources=[],
-                route=route_name,
-                user_role=user_role,
-                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
-                guardrail_flags=["generation_failed"],
-            )
-        
-        logger.info(f"Generated answer: {answer[:100]}...")
-        
-        # ====================
-        # STEP 5: OUTPUT GUARDS
-        # ====================
-        logger.info("STEP 5: Output validation...")
-        
-        is_safe, output_warning, output_flags = self.output_guards.validate_response(
-            answer,
-            chunks,
-            user_role,
-            authorized_collections
-        )
-        
-        metadata.guardrail_flags.extend(output_flags)
-        
-        # Append warning to answer if applicable
-        if output_warning:
-            answer = self.output_guards.append_warning_to_response(answer, output_warning)
-        
-        # ====================
-        # BUILD SOURCES
-        # ====================
-        sources = []
-        seen_sources = set()
-        
-        for chunk in chunks:
-            if len(sources) >= 3:
-                break
-                
-            source_key = (
-                chunk.source_document,
-                chunk.page_number or 1,
-                chunk.section_title or ""
-            )
             
-            if source_key not in seen_sources:
-                seen_sources.add(source_key)
-                sources.append({
-                    "document": chunk.source_document,
-                    "page_number": chunk.page_number or 1,
-                    "section_title": chunk.section_title,
-                })
-        
-        metadata.sources = [s["document"] for s in sources]
-        metadata.answer = answer
-        
-        logger.info("Query processing complete")
-        
-        # Return final response
-        return RAGResponse(
-            answer=answer,
-            sources=sources,
-            route=route_name,
-            user_role=user_role,
-            accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
-            guardrail_flags=metadata.guardrail_flags,
-            guardrail_warnings=[output_warning] if output_warning else [],
-        )
+            logger.info(f"Routed to: {route_name} → collections: {authorized_collections}")
+            
+            # ====================
+            # STEP 3: RETRIEVAL
+            # ====================
+            with tracer.start_as_current_span("stage_3_retrieval") as retr_span:
+                logger.info("STEP 3: RBAC-enforced retrieval...")
+                
+                retrieval_result = self.retriever.retrieve(
+                    user_role=user_role,
+                    collections=authorized_collections,
+                    query_text=query_text,
+                    top_k=RETRIEVAL_CONFIG.get("top_k", 5),
+                )
+                
+                retr_span.set_attribute("retrieval.rbac_passed", retrieval_result.rbac_passed)
+                retr_span.set_attribute("retrieval.chunks_count", len(retrieval_result.chunks))
+            
+            if not retrieval_result.rbac_passed:
+                logger.warning(f"Retrieval RBAC check failed: {retrieval_result.reason}")
+                return RAGResponse(
+                    answer="Unable to retrieve documents due to access restrictions.",
+                    sources=[],
+                    route=route_name,
+                    user_role=user_role,
+                    accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
+                    rbac_denied=True,
+                    rbac_reason=retrieval_result.reason,
+                )
+            
+            chunks = retrieval_result.chunks
+            metadata.chunks_retrieved = len(chunks)
+            
+            if not chunks:
+                logger.info(f"No relevant documents found")
+                return RAGResponse(
+                    answer="I couldn't find relevant information to answer your question.",
+                    sources=[],
+                    route=route_name,
+                    user_role=user_role,
+                    accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
+                    guardrail_flags=["no_relevant_context"],
+                )
+            
+            logger.info(f"Retrieved {len(chunks)} chunks")
+            
+            # ====================
+            # STEP 4: LLM GENERATION
+            # ====================
+            with tracer.start_as_current_span("stage_4_generation") as gen_span:
+                logger.info("STEP 4: LLM generation...")
+                
+                # Build context from chunks
+                context = self._build_context(chunks)
+                
+                # Generate answer
+                answer = self._generate_answer(query_text, context, user_role)
+                
+                gen_span.set_attribute("generation.successful", bool(answer))
+            
+            if not answer or not answer.strip():
+                return RAGResponse(
+                    answer="I wasn't able to generate a response for your question. Please try rephrasing or ask a different question.",
+                    sources=[],
+                    route=route_name,
+                    user_role=user_role,
+                    accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
+                    guardrail_flags=["generation_failed"],
+                )
+            
+            logger.info(f"Generated answer: {answer[:100]}...")
+            
+            # ====================
+            # STEP 5: OUTPUT GUARDS
+            # ====================
+            with tracer.start_as_current_span("stage_5_output_guards"):
+                logger.info("STEP 5: Output validation...")
+                
+                is_safe, output_warning, output_flags = self.output_guards.validate_response(
+                    answer,
+                    chunks,
+                    user_role,
+                    authorized_collections
+                )
+            
+            metadata.guardrail_flags.extend(output_flags)
+            
+            # Append warning to answer if applicable
+            if output_warning:
+                answer = self.output_guards.append_warning_to_response(answer, output_warning)
+            
+            # ====================
+            # BUILD SOURCES
+            # ====================
+            sources = []
+            seen_sources = set()
+            
+            for chunk in chunks:
+                if len(sources) >= 3:
+                    break
+                    
+                source_key = (
+                    chunk.source_document,
+                    chunk.page_number or 1,
+                    chunk.section_title or ""
+                )
+                
+                if source_key not in seen_sources:
+                    seen_sources.add(source_key)
+                    sources.append({
+                        "document": chunk.source_document,
+                        "page_number": chunk.page_number or 1,
+                        "section_title": chunk.section_title,
+                    })
+            
+            metadata.sources = [s["document"] for s in sources]
+            metadata.answer = answer
+            
+            logger.info("Query processing complete")
+            
+            # Return final response
+            return RAGResponse(
+                answer=answer,
+                sources=sources,
+                route=route_name,
+                user_role=user_role,
+                accessible_collections=self.user_manager.get_user_accessible_collections(user_role),
+                guardrail_flags=metadata.guardrail_flags,
+                guardrail_warnings=[output_warning] if output_warning else [],
+            )
     
     def _build_context(self, chunks: List) -> str:
         """
@@ -318,30 +338,43 @@ class RAGPipeline:
             Generated answer or None if error
         """
         try:
-            prompt = self._build_prompt(query, context, user_role)
-            
-            response = self.llm_client.chat.completions.create(
-                model=self.llm_model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a helpful assistant for FinSolve Technologies. "
-                            "Answer questions based ONLY on the provided context. "
-                            "If the context doesn't contain the answer, say so. "
-                            "Always cite your sources with document name and page number."
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    },
-                ],
-                temperature=self.llm_temperature,
-                max_tokens=self.llm_max_tokens,
-            )
-            
-            return response.choices[0].message.content
+            with tracer.start_as_current_span("llm_generation") as span:
+                span.set_attribute("gen_ai.system", "groq")
+                span.set_attribute("gen_ai.request.model", self.llm_model)
+                
+                # If enabled, record the prompt content
+                if os.getenv("AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED", "false").lower() == "true":
+                    span.set_attribute("gen_ai.content.prompt", context[:1000]) # Sample context
+                
+                prompt = self._build_prompt(query, context, user_role)
+                
+                response = self.llm_client.chat.completions.create(
+                    model=self.llm_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a helpful assistant for FinSolve Technologies. "
+                                "Answer questions based ONLY on the provided context. "
+                                "If the context doesn't contain the answer, say so. "
+                                "Always cite your sources with document name and page number."
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        },
+                    ],
+                    temperature=self.llm_temperature,
+                    max_tokens=self.llm_max_tokens,
+                )
+                
+                answer = response.choices[0].message.content
+                
+                if answer and os.getenv("AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED", "false").lower() == "true":
+                    span.set_attribute("gen_ai.content.completion", answer)
+                    
+                return answer
         
         except Exception as e:
             logger.error(f"Error generating answer with Groq: {str(e)}")

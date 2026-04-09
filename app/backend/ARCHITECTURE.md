@@ -460,8 +460,14 @@ RBAC Check:
 
 ### 3. **Why RBAC at Vector Store Level?**
 - Cannot be bypassed
-- Single source of truth
-- Efficient (filters at query time)
+- **Retrieval Engine**: RBAC-aware vector search
+- **Generation Engine**: Groq (Llama 3.3 70B)
+- **Observability Layer**: Azure Monitor + OpenTelemetry manual spans
+- **Security Layer**: Input/Output Guardrails
+- Defense in depth
+- Prevents malicious input
+- Ensures answer quality
+- Auditable (logged)
 
 ### 4. **Why Separate Input/Output Guards?**
 - Defense in depth

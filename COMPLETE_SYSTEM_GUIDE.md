@@ -36,10 +36,16 @@ This document provides an overview of the complete FinBot RAG system with both f
 │ 5. Output Guards (grounding, citations) │
 └────────────────┬─────────────────────────┘
                  ↓
-┌──────────────────────────────────────────┐
-│  Vector Store (Qdrant) + LLM (Groq)     │
-│  Document Ingestion Pipeline            │
-└──────────────────────────────────────────┘
+┌───────────────────────────────────────────┐
+│        Observability (Azure OTEL)         │
+│ • Automatic HTTP request tracing          │
+│ • Manual Spans for RAG Stages             │
+│ • Prompt/Response Content Monitoring      │
+└───────────────────────────────────────────┘
+                 ↓
+┌───────────────────────────────────────────┐
+│           Output to Frontend              │
+└───────────────────────────────────────────┘
 ```
 
 ## Quick Start Options

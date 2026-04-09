@@ -248,9 +248,9 @@ SEMANTIC_ROUTES = {
 
 # Off-topic keywords/patterns
 OFF_TOPIC_KEYWORDS = [
-    "poem", "poem", "joke", "cricket", "sports", "music", "movie", "recipe",
+    "poem", "joke", "cricket", "sports", "music", "movie", "recipe",
     "weather", "horoscope", "lottery", "gaming tips", "dating advice",
-    "write me", "tell me a", "generate", "compose", "create a",
+    "write me a story", "tell me a joke", "compose a song", "create a story",
 ]
 
 # Prompt injection patterns

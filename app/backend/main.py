@@ -244,6 +244,16 @@ async def chat(request: ChatRequest):
             guardrail_flags=["server_error"],
             guardrail_warnings=[f"Internal error: {str(e)}"],
         )
+    finally:
+        # Force flush traces after each request during debugging/diag
+        try:
+            from opentelemetry import trace
+            provider = trace.get_tracer_provider()
+            if hasattr(provider, "force_flush"):
+                provider.force_flush()
+                logger.debug("OpenTelemetry traces force-flushed.")
+        except Exception as flush_error:
+            logger.warning(f"Failed to flush traces: {str(flush_error)}")
 
 
 # ====================

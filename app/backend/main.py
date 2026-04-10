@@ -17,14 +17,29 @@ import sys
 
 # Initialize Azure Monitor Tracing FIRST (Before project imports)
 def init_azure_monitor():
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
+    from opentelemetry import trace
+    
     # Check both standard and common variants
     connection_string = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING") or os.getenv("APPLICATION_INSIGHTS_CONNECTION_STRING")
     
     if connection_string:
         connection_string = connection_string.strip("'\"")
         try:
-            configure_azure_monitor(connection_string=connection_string)
-            print("INFO: Azure Monitor tracing initialized successfully.")
+            # Set up the provider
+            provider = TracerProvider()
+            
+            # Configure the Azure Monitor Exporter manually for better visibility
+            exporter = AzureMonitorTraceExporter(connection_string=connection_string)
+            span_processor = BatchSpanProcessor(exporter)
+            provider.add_span_processor(span_processor)
+            
+            # Register the provider globally
+            trace.set_tracer_provider(provider)
+            
+            print("INFO: Azure Monitor tracing initialized successfully (Manual Setup).")
             return True, connection_string
         except Exception as e:
             print(f"ERROR: Failed to initialize Azure Monitor Tracing: {str(e)}")

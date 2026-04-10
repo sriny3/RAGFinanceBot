@@ -17,6 +17,7 @@ import sys
 
 # Initialize Azure Monitor Tracing FIRST (Before project imports)
 def init_azure_monitor():
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
@@ -28,8 +29,11 @@ def init_azure_monitor():
     if connection_string:
         connection_string = connection_string.strip("'\"")
         try:
-            # Set up the provider
-            provider = TracerProvider()
+            # Create a Resource to identify the service
+            resource = Resource.create({SERVICE_NAME: "finbot-backend"})
+            
+            # Set up the provider with the resource
+            provider = TracerProvider(resource=resource)
             
             # Configure the Azure Monitor Exporter manually for better visibility
             exporter = AzureMonitorTraceExporter(connection_string=connection_string)

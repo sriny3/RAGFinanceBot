@@ -171,6 +171,26 @@ async def diagnostic():
         conn_str_clean = conn_str.strip("'\"")
         masked = f"{conn_str_clean[:20]}...{conn_str_clean[-5:]}" if len(conn_str_clean) > 25 else "Too short"
         
+    # Execute a manual test span to verify connectivity
+    test_span_ok = False
+    test_error = None
+    try:
+        from opentelemetry import trace
+        test_tracer = trace.get_tracer("diagnostic.tracer")
+        with test_tracer.start_as_current_span("Diagnostic-Test-Span") as span:
+            span.set_attribute("diag.timestamp", str(sys.version))
+            span.add_event("Handshake test")
+            logger.info("Manual diagnostic span created.")
+        
+        # Force flush to ensure it is sent immediately
+        provider = trace.get_tracer_provider()
+        if hasattr(provider, "force_flush"):
+            provider.force_flush()
+            test_span_ok = True
+    except Exception as e:
+        test_error = str(e)
+        logger.error(f"Manual span test failed: {test_error}")
+
     return {
         "azure_monitor_status": AZURE_MONITOR_STATUS,
         "azure_monitor_ok": AZURE_MONITOR_OK,
@@ -179,6 +199,8 @@ async def diagnostic():
         "env_vars_keys": list(os.environ.keys()),
         "python_version": sys.version,
         "otel_libs_loaded": "opentelemetry" in sys.modules,
+        "manual_test_span_sent": test_span_ok,
+        "manual_test_error": test_error,
     }
 
 

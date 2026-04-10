@@ -13,20 +13,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+import sys
 
 # Initialize Azure Monitor Tracing FIRST (Before project imports)
-connection_string = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
-if connection_string:
-    # Remove potential quotes (HF secrets sometimes include them)
-    connection_string = connection_string.strip("'\"")
-    try:
-        configure_azure_monitor(connection_string=connection_string)
-        # We'll instrument the app later after it's created
-    except Exception as e:
-        # Don't use logger yet as logging isn't fully set up with basicConfig
-        print(f"ERROR: Failed to initialize Azure Monitor Tracing: {str(e)}")
-        import traceback
-        traceback.print_exc()
+def init_azure_monitor():
+    # Check both standard and common variants
+    connection_string = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING") or os.getenv("APPLICATION_INSIGHTS_CONNECTION_STRING")
+    
+    if connection_string:
+        connection_string = connection_string.strip("'\"")
+        try:
+            configure_azure_monitor(connection_string=connection_string)
+            print("INFO: Azure Monitor tracing initialized successfully.")
+            return True, connection_string
+        except Exception as e:
+            print(f"ERROR: Failed to initialize Azure Monitor Tracing: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return False, str(e)
+    return False, "CONNECTION_STRING_NOT_FOUND"
+
+AZURE_MONITOR_OK, AZURE_MONITOR_STATUS = init_azure_monitor()
 
 from pipeline.rag_pipeline import get_rag_pipeline
 from retrieval.user_auth import get_user_manager
@@ -147,6 +154,32 @@ if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
         logger.info("FastAPI application instrumented with OpenTelemetry")
     except Exception as e:
         logger.error(f"Failed to instrument FastAPI app: {str(e)}")
+
+
+# ====================
+# DIAGNOSTIC ENDPOINT
+# ====================
+
+@app.get("/api/diag")
+async def diagnostic():
+    """Diagnostic endpoint to check environment and tracing status."""
+    conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING") or os.getenv("APPLICATION_INSIGHTS_CONNECTION_STRING")
+    
+    # Mask connection string
+    masked = None
+    if conn_str:
+        conn_str_clean = conn_str.strip("'\"")
+        masked = f"{conn_str_clean[:20]}...{conn_str_clean[-5:]}" if len(conn_str_clean) > 25 else "Too short"
+        
+    return {
+        "azure_monitor_status": AZURE_MONITOR_STATUS,
+        "azure_monitor_ok": AZURE_MONITOR_OK,
+        "connection_string_found": conn_str is not None,
+        "connection_string_masked": masked,
+        "env_vars_keys": list(os.environ.keys()),
+        "python_version": sys.version,
+        "otel_libs_loaded": "opentelemetry" in sys.modules,
+    }
 
 
 # ====================

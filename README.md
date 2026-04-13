@@ -117,9 +117,7 @@ FinBot solves both problems:
 
 4. **Guardrails on Both Sides**: Input guards block prompt injection, off-topic queries, and PII. Output guards verify grounding, enforce citations, and detect cross-role leakage.
 
-5. **Built-in Observability**: Full OpenTelemetry integration with Azure AI Foundry. Every request is traced, and the RAG pipeline is broken down into granular spans (Guardrails, Routing, Retrieval, Generation) for production monitoring.
-
-6. **Modular Design**: Each component (routing, retrieval, guardrails, LLM) is independently testable and replaceable.
+5. **Modular Design**: Each component (routing, retrieval, guardrails, LLM) is independently testable and replaceable.
 
 ---
 
@@ -241,10 +239,6 @@ Edit `.env` and add your Groq API key:
 GROQ_API_KEY=gsk-...your-key-here...
 QDRANT_MODE=local
 SERVER_PORT=8000
-
-# Optional: Azure AI Foundry Tracing
-APPLICATIONINSIGHTS_CONNECTION_STRING=...your-connection-string...
-AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true
 ```
 
 ### 3. Ingest Documents
@@ -774,8 +768,6 @@ Since free-tier hosting uses ephemeral storage, you **must** use Qdrant Cloud to
    - `QDRANT_URL`: Your Qdrant Cloud URL (include port :6333)
    - `QDRANT_API_KEY`: Your Qdrant Cloud API Key
    - `PORT`: Automatically set to 7860 by Hugging Face
-   - `APPLICATIONINSIGHTS_CONNECTION_STRING`: Your Azure trace connection string
-   - `AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED`: `true`
 
 ### 3. Frontend (Vercel)
 1. **Import Repository**: Connect your GitHub repository to [Vercel](https://vercel.com).

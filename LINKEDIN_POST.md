@@ -126,7 +126,7 @@ Building this project taught me three things:
 
 🔗 **GitHub:** https://github.com/sriny3/RAGFinBOT
 
-🌍 **Live App:** https://sriny-rag-fin-bot-unique-123.vercel.app/
+🌍 **Live App:** https://rag-finance-bot.vercel.app/
 
 ---
 

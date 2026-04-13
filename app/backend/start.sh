@@ -7,7 +7,6 @@ if [ -d "app/backend" ]; then
 fi
 
 # Start the application with uvicorn directly
-# Direct uvicorn is more stable for OpenTelemetry in single-worker environments
 PORT_NUMBER=${PORT:-8000}
 
 echo "Starting FinBot Backend on port $PORT_NUMBER..."

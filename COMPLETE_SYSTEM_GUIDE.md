@@ -37,13 +37,6 @@ This document provides an overview of the complete FinBot RAG system with both f
 └────────────────┬─────────────────────────┘
                  ↓
 ┌───────────────────────────────────────────┐
-│        Observability (Azure OTEL)         │
-│ • Automatic HTTP request tracing          │
-│ • Manual Spans for RAG Stages             │
-│ • Prompt/Response Content Monitoring      │
-└───────────────────────────────────────────┘
-                 ↓
-┌───────────────────────────────────────────┐
 │           Output to Frontend              │
 └───────────────────────────────────────────┘
 ```

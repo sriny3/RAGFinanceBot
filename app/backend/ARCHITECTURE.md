@@ -462,7 +462,6 @@ RBAC Check:
 - Cannot be bypassed
 - **Retrieval Engine**: RBAC-aware vector search
 - **Generation Engine**: Groq (Llama 3.3 70B)
-- **Observability Layer**: Azure Monitor + OpenTelemetry manual spans
 - **Security Layer**: Input/Output Guardrails
 - Defense in depth
 - Prevents malicious input

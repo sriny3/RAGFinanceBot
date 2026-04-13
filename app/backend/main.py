@@ -11,48 +11,8 @@ from typing import Optional
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from azure.monitor.opentelemetry import configure_azure_monitor
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-import sys
 
-# Initialize Azure Monitor Tracing FIRST (Before project imports)
-def init_azure_monitor():
-    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
-    from opentelemetry import trace
-    
-    # Check both standard and common variants
-    connection_string = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING") or os.getenv("APPLICATION_INSIGHTS_CONNECTION_STRING")
-    
-    if connection_string:
-        connection_string = connection_string.strip("'\"")
-        try:
-            # Create a Resource to identify the service
-            resource = Resource.create({SERVICE_NAME: "finbot-backend"})
-            
-            # Set up the provider with the resource
-            provider = TracerProvider(resource=resource)
-            
-            # Configure the Azure Monitor Exporter manually for better visibility
-            exporter = AzureMonitorTraceExporter(connection_string=connection_string)
-            span_processor = BatchSpanProcessor(exporter)
-            provider.add_span_processor(span_processor)
-            
-            # Register the provider globally
-            trace.set_tracer_provider(provider)
-            
-            print("INFO: Azure Monitor tracing initialized successfully (Manual Setup).")
-            return True, connection_string
-        except Exception as e:
-            print(f"ERROR: Failed to initialize Azure Monitor Tracing: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return False, str(e)
-    return False, "CONNECTION_STRING_NOT_FOUND"
 
-AZURE_MONITOR_OK, AZURE_MONITOR_STATUS = init_azure_monitor()
 
 from pipeline.rag_pipeline import get_rag_pipeline
 from retrieval.user_auth import get_user_manager
@@ -166,61 +126,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Instrument FastAPI app
-if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
-    try:
-        FastAPIInstrumentor.instrument_app(app)
-        logger.info("FastAPI application instrumented with OpenTelemetry")
-    except Exception as e:
-        logger.error(f"Failed to instrument FastAPI app: {str(e)}")
 
 
-# ====================
-# DIAGNOSTIC ENDPOINT
-# ====================
 
-@app.get("/api/diag")
-async def diagnostic():
-    """Diagnostic endpoint to check environment and tracing status."""
-    conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING") or os.getenv("APPLICATION_INSIGHTS_CONNECTION_STRING")
-    
-    # Mask connection string
-    masked = None
-    if conn_str:
-        conn_str_clean = conn_str.strip("'\"")
-        masked = f"{conn_str_clean[:20]}...{conn_str_clean[-5:]}" if len(conn_str_clean) > 25 else "Too short"
-        
-    # Execute a manual test span to verify connectivity
-    test_span_ok = False
-    test_error = None
-    try:
-        from opentelemetry import trace
-        test_tracer = trace.get_tracer("diagnostic.tracer")
-        with test_tracer.start_as_current_span("Diagnostic-Test-Span") as span:
-            span.set_attribute("diag.timestamp", str(sys.version))
-            span.add_event("Handshake test")
-            logger.info("Manual diagnostic span created.")
-        
-        # Force flush to ensure it is sent immediately
-        provider = trace.get_tracer_provider()
-        if hasattr(provider, "force_flush"):
-            provider.force_flush()
-            test_span_ok = True
-    except Exception as e:
-        test_error = str(e)
-        logger.error(f"Manual span test failed: {test_error}")
 
-    return {
-        "azure_monitor_status": AZURE_MONITOR_STATUS,
-        "azure_monitor_ok": AZURE_MONITOR_OK,
-        "connection_string_found": conn_str is not None,
-        "connection_string_masked": masked,
-        "env_vars_keys": list(os.environ.keys()),
-        "python_version": sys.version,
-        "otel_libs_loaded": "opentelemetry" in sys.modules,
-        "manual_test_span_sent": test_span_ok,
-        "manual_test_error": test_error,
-    }
 
 
 # ====================
@@ -285,16 +194,7 @@ async def chat(request: ChatRequest):
             guardrail_flags=["server_error"],
             guardrail_warnings=[f"Internal error: {str(e)}"],
         )
-    finally:
-        # Force flush traces after each request during debugging/diag
-        try:
-            from opentelemetry import trace
-            provider = trace.get_tracer_provider()
-            if hasattr(provider, "force_flush"):
-                provider.force_flush()
-                logger.debug("OpenTelemetry traces force-flushed.")
-        except Exception as flush_error:
-            logger.warning(f"Failed to flush traces: {str(flush_error)}")
+
 
 
 # ====================

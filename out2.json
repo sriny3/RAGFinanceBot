@@ -1,0 +1,16 @@
+{
+  "answer": "I couldn't find relevant information to answer your question.",
+  "sources": [],
+  "route": "hr_general_route",
+  "user_role": "c_level",
+  "accessible_collections": [
+    "general",
+    "hr"
+  ],
+  "guardrail_flags": [
+    "no_relevant_context"
+  ],
+  "guardrail_warnings": [],
+  "rbac_denied": false,
+  "rbac_reason": null
+}

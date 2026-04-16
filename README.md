@@ -16,7 +16,7 @@ pinned: false
 - 🚀 **Quick Start**: See [SETUP_NEXTJS.md](SETUP_NEXTJS.md) to get running in 5 minutes
 - 📖 **Full Guide**: See [COMPLETE_SYSTEM_GUIDE.md](COMPLETE_SYSTEM_GUIDE.md) for architecture, all components, and advanced topics
 - 📊 **Evaluation & Metrics**: See [EVALUATION_GUIDE.md](EVALUATION_GUIDE.md) for the evaluation workflow diagram and RAGAs metrics explanation
-- 🎬 **Demo Recording**: Watch the [FinBot Project Demo](demo_recording.webp) or view it embedded below. The live deployed app is at [https://rag-finance-bot.vercel.app/](https://rag-finance-bot.vercel.app/).
+- 🎬 **Demo Recording**: Watch the [FinBot Project Demo](demo_recording.gif) or view it embedded below. The live deployed app is at [https://rag-finance-bot.vercel.app/](https://rag-finance-bot.vercel.app/).
 - ⚛️ **NextJS Frontend**: See [app/frontend-nextjs/README.md](app/frontend-nextjs/README.md) for frontend-specific details
 
 ---
@@ -389,7 +389,7 @@ Login Screen shows 5 demo users:
 
 ### 🎬 Screen Recording
 
-![FinBot Working Demo](demo_recording.webp)
+![FinBot Working Demo](demo_recording.gif)
 *Demo of the live FinBot application interacting on Vercel at [https://rag-finance-bot.vercel.app/](https://rag-finance-bot.vercel.app/)*
 
 ### Verify RBAC Enforcement

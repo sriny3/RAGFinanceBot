@@ -240,6 +240,7 @@ All styled with **Tailwind CSS** with purple/blue color scheme.
 
 ### 6. **Evaluation Framework** (VALIDATION)
 - **Location**: `evaluation/eval_ablation.py`
+- **Link**: See [EVALUATION_GUIDE.md](EVALUATION_GUIDE.md) for the workflow diagram
 - **Metrics**: Faithfulness, relevancy, precision, recall, correctness
 - **Ablations**: 5 component ablations showing 65% aggregate impact
 - **Value**: Quantifies each component's contribution
@@ -409,6 +410,8 @@ docker-compose up -d
 ## Documentation Files
 
 - **README.md** - Main system documentation with architecture
+- **COMPLETE_SYSTEM_GUIDE.md** - This document
+- **EVALUATION_GUIDE.md** - Detailed evaluation workflow and metrics
 - **SETUP_NEXTJS.md** - NextJS frontend quick start
 - **app/frontend-nextjs/README.md** - NextJS detailed documentation
 - **app/backend/requirements.txt** - Python dependencies

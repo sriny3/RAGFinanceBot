@@ -1,0 +1,119 @@
+============================================================
+  HF HEALTH CHECK
+============================================================
+[200]
+{
+  "status": "healthy",
+  "collections_available": true,
+  "collections": [
+    "marketing",
+    "finance",
+    "general",
+    "engineering",
+    "hr"
+  ]
+}
+
+============================================================
+  HF TEST 1: RBAC denial (mkt_carol asks finance Q)
+============================================================
+[200]
+{
+  "answer": "Access denied: Your role 'marketing' does not have permission to access Finance information. You can only access: general, marketing.",
+  "sources": [],
+  "route": "denied",
+  "user_role": "marketing",
+  "accessible_collections": [
+    "general",
+    "marketing"
+  ],
+  "guardrail_flags": [
+    "rbac_denied"
+  ],
+  "guardrail_warnings": [],
+  "rbac_denied": true,
+  "rbac_reason": "Access denied: Your role 'marketing' does not have permission to access Finance information. You can only access: general, marketing."
+}
+
+============================================================
+  HF TEST 2: fin_alice finance query (should SUCCEED)
+============================================================
+[200]
+{
+  "answer": "The Q3 revenue was 203 \u20b9 Crore. (From: quarterly_financial_report.docx, Page 1)\n\n\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts.",
+  "sources": [
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    }
+  ],
+  "route": "finance_route",
+  "user_role": "finance",
+  "accessible_collections": [
+    "general",
+    "finance"
+  ],
+  "guardrail_flags": [
+    "potentially_ungrounded"
+  ],
+  "guardrail_warnings": [
+    "\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts."
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
+
+============================================================
+  HF TEST 3: Prompt injection (should be BLOCKED)
+============================================================
+[200]
+{
+  "answer": "Query matches prohibited pattern: ignore.*instruction",
+  "sources": [],
+  "route": "blocked_by_guardrails",
+  "user_role": "employee",
+  "accessible_collections": [
+    "general"
+  ],
+  "guardrail_flags": [
+    "prompt_injection_detected"
+  ],
+  "guardrail_warnings": [
+    "Query matches prohibited pattern: ignore.*instruction"
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
+
+============================================================
+  HF TEST 4: ceo_dave (should SUCCEED)
+============================================================
+[200]
+{
+  "answer": "The Q3 revenue was 203 \u20b9 Crore. (From: quarterly_financial_report.docx, Page 1)\n\n\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts.",
+  "sources": [
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    }
+  ],
+  "route": "finance_route",
+  "user_role": "c_level",
+  "accessible_collections": [
+    "general",
+    "finance",
+    "engineering",
+    "marketing",
+    "hr"
+  ],
+  "guardrail_flags": [
+    "potentially_ungrounded"
+  ],
+  "guardrail_warnings": [
+    "\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts."
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}

@@ -1,0 +1,58 @@
+============================================================
+  TEST 2: fin_alice finance query (should SUCCEED)
+============================================================
+{
+  "answer": "The Q3 revenue was 203 \u20b9 Crore. (From: quarterly_financial_report.docx, Page 1)\n\n\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts.",
+  "sources": [
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    }
+  ],
+  "route": "finance_route",
+  "user_role": "finance",
+  "accessible_collections": [
+    "general",
+    "finance"
+  ],
+  "guardrail_flags": [
+    "potentially_ungrounded"
+  ],
+  "guardrail_warnings": [
+    "\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts."
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
+
+============================================================
+  TEST 5: ceo_dave multi-collection query (should SUCCEED)
+============================================================
+{
+  "answer": "The Q3 revenue was 203 (\u20b9 Crore). (From: quarterly_financial_report.docx, Page 1)\n\n\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts.",
+  "sources": [
+    {
+      "document": "quarterly_financial_report.docx",
+      "page_number": 1,
+      "section_title": "General"
+    }
+  ],
+  "route": "finance_route",
+  "user_role": "c_level",
+  "accessible_collections": [
+    "general",
+    "finance",
+    "engineering",
+    "marketing",
+    "hr"
+  ],
+  "guardrail_flags": [
+    "potentially_ungrounded"
+  ],
+  "guardrail_warnings": [
+    "\u26a0\ufe0f **Warning**: Some claims in this response may not be directly supported by the source documents. Please verify important facts."
+  ],
+  "rbac_denied": false,
+  "rbac_reason": null
+}
